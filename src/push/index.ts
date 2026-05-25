@@ -56,6 +56,7 @@ async function run(): Promise<void> {
   const upstreamServer = process.env.GITHUB_SERVER_URL ?? "https://github.com";
   const upstreamOwner = ctx.repo.owner;
   const upstreamRepo = ctx.repo.repo;
+  const triggerSha = resolveTriggerSha(ctx);
 
   if (
     isSameTarget(
@@ -75,6 +76,10 @@ async function run(): Promise<void> {
     return;
   }
 
+  core.info(`upstream: ${upstreamServer}/${upstreamOwner}/${upstreamRepo} (trigger ${triggerSha})`);
+  core.info(`target:   ${target.serverUrl}/${target.owner}/${target.repo}`);
+
+  core.info("authenticating upstream app...");
   const upstream = await createAppOctokit({
     appId: upstreamAppId,
     privateKey: upstreamPrivateKey,
@@ -82,6 +87,7 @@ async function run(): Promise<void> {
     owner: upstreamOwner,
     repo: upstreamRepo,
   });
+  core.info("authenticating target app...");
   const targetOctokit = await createAppOctokit({
     appId: targetAppId,
     privateKey: targetPrivateKey,
@@ -104,7 +110,7 @@ async function run(): Promise<void> {
     upstream,
     upstreamOwner,
     upstreamRepo,
-    sha,
+    triggerSha,
     checkName,
     target
   );
@@ -145,7 +151,7 @@ async function run(): Promise<void> {
     } else {
       await git.amendCommitMessage(amendedMessage);
       pushedSha = await git.showCommitSha("HEAD");
-      await git.pushForce("target", `HEAD:refs/heads/${branch}`);
+      await git.pushForce("target", `HEAD:refs/heads/${branch}`, target.serverUrl);
     }
 
     let detailsUrl: string;
@@ -234,7 +240,11 @@ async function pushSignedAmend(input: {
   branch: string;
 }): Promise<string> {
   const scratchBranch = `${input.branch}.scratch`;
-  await input.git.pushForce("target", `${input.baseSha}:refs/heads/${scratchBranch}`);
+  await input.git.pushForce(
+    "target",
+    `${input.baseSha}:refs/heads/${scratchBranch}`,
+    input.target.serverUrl
+  );
 
   try {
     const newSha = await createSignedAmendedCommit({
@@ -319,6 +329,18 @@ async function getInstallationToken(octokit: Octokit): Promise<string> {
   const auth = (await octokit.auth({ type: "installation" })) as { token: string };
   if (!auth?.token) throw new Error("failed to obtain installation token from Octokit auth.");
   return auth.token;
+}
+
+function resolveTriggerSha(ctx: typeof github.context): string {
+  const payload = ctx.payload as {
+    pull_request?: { head?: { sha?: string } };
+    workflow_run?: { head_sha?: string };
+  };
+  return (
+    payload.pull_request?.head?.sha ??
+    payload.workflow_run?.head_sha ??
+    ctx.sha
+  );
 }
 
 run().catch((err) => {

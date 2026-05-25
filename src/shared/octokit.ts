@@ -21,10 +21,21 @@ export async function createAppOctokit(input: AppAuthInput): Promise<Octokit> {
     },
   });
 
-  const installation = await appOctokit.apps.getRepoInstallation({
-    owner: input.owner,
-    repo: input.repo,
-  });
+  let installation;
+  try {
+    installation = await appOctokit.apps.getRepoInstallation({
+      owner: input.owner,
+      repo: input.repo,
+    });
+  } catch (err) {
+    const status = (err as { status?: number }).status;
+    if (status === 404) {
+      throw new Error(
+        `GitHub App ${input.appId} is not installed on ${input.owner}/${input.repo} at ${baseUrl}.`
+      );
+    }
+    throw err;
+  }
 
   return new Octokit({
     baseUrl,
