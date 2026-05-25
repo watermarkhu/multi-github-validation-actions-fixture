@@ -17,7 +17,7 @@ inputs:
     required: false
     default: main
   mode:
-    description: 'direct' (push branch only) or 'pr' (push branch + open/refresh PR). Default 'pr'.
+    description: "'direct' (push branch only) or 'pr' (push branch + open/refresh PR). Default 'pr'."
     required: false
     default: pr
   pr_labels:
@@ -26,7 +26,8 @@ inputs:
     default: ""
   check_name:
     description: Name of the upstream check run to create.
-    required: true
+    required: false
+    default: "Cross-GitHub Validation"
   branch_prefix:
     description: Prefix for the downstream branch name. Default 'cross-validation'.
     required: false
@@ -53,7 +54,7 @@ inputs:
 
 outputs:
   skipped:
-    description: 'true' when the action skipped because the target equals the current server+repo.
+    description: "'true' when the action skipped because the target equals the current server+repo."
   check_run_id:
     description: ID of the created upstream check run (empty when skipped).
   target_branch:
@@ -63,4 +64,4 @@ outputs:
 
 runs:
   using: node20
-  main: dist/index.js
+  main: dist/index.cjs

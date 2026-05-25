@@ -145,7 +145,7 @@ async function run(): Promise<void> {
     } else {
       await git.amendCommitMessage(amendedMessage);
       pushedSha = await git.showCommitSha("HEAD");
-      await git.pushForce("target", `HEAD:refs/heads/${branch}`);
+      await git.pushForce("target", `HEAD:refs/heads/${branch}`, target.serverUrl);
     }
 
     let detailsUrl: string;
@@ -234,7 +234,11 @@ async function pushSignedAmend(input: {
   branch: string;
 }): Promise<string> {
   const scratchBranch = `${input.branch}.scratch`;
-  await input.git.pushForce("target", `${input.baseSha}:refs/heads/${scratchBranch}`);
+  await input.git.pushForce(
+    "target",
+    `${input.baseSha}:refs/heads/${scratchBranch}`,
+    input.target.serverUrl
+  );
 
   try {
     const newSha = await createSignedAmendedCommit({

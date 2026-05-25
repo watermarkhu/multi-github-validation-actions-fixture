@@ -11,8 +11,8 @@
   },
   "scripts": {
     "build": "pnpm run build:report && pnpm run build:push",
-    "build:report": "esbuild src/report/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/index.js",
-    "build:push": "esbuild src/push/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=.github/actions/push/dist/index.js",
+    "build:report": "esbuild src/report/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=report/dist/index.cjs",
+    "build:push": "esbuild src/push/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=push/dist/index.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

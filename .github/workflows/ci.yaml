@@ -2,14 +2,11 @@ name: ci
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
 permissions: {}
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,6 +26,28 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm run build
+      - uses: ./report
+        with:
+          state: started
+          app_id: ${{ vars.WATERMARKHU_APP_ID }}
+          private_key: ${{ secrets.WATERMARKHU_APP_PRIVATE_KEY }}
+      - uses: ./report
+        with:
+          state: success
+          app_id: ${{ vars.WATERMARKHU_APP_ID }}
+          private_key: ${{ secrets.WATERMARKHU_APP_PRIVATE_KEY }}
+      - uses: ./report
+        if: always() && failure()
+        with:
+          state: failure
+          app_id: ${{ vars.WATERMARKHU_APP_ID }}
+          private_key: ${{ secrets.WATERMARKHU_APP_PRIVATE_KEY }}
+      - uses: ./report
+        if: always() && cancelled()
+        with:
+          state: cancelled
+          app_id: ${{ vars.WATERMARKHU_APP_ID }}
+          private_key: ${{ secrets.WATERMARKHU_APP_PRIVATE_KEY }}
 
   zizmor:
     runs-on: ubuntu-latest
