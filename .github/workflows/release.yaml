@@ -3,11 +3,12 @@ name: release
 on:
   pull_request:
     branches: [main]
-    types: 
+    types:
       - opened
       - reopened
       - synchronize
       - edited
+      - closed
 
 permissions: {}
 
@@ -88,4 +89,3 @@ jobs:
           body: ${{ needs.version.outputs.release-notes }}
           tag_name: ${{ needs.version.outputs.tag }}
           prerelease: ${{ needs.version.outputs.prerelease }}
-
